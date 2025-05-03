@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Interactive Czechia Model</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Czechia Model Carousel</title>
   <style>
     html, body {
       margin: 0;
@@ -32,7 +32,7 @@
       align-items: center;
       justify-content: center;
       pointer-events: none;
-      z-index: 1;
+      z-index: 2;
       opacity: 0;
       transition: opacity 5s ease;
     }
@@ -82,57 +82,55 @@
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);
-    let model;
-
     scene.clearColor = BABYLON.Color3.FromHexString("#B5D490");
 
-    // Static camera setup (no user control)
     const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 0, -10), scene);
     camera.setTarget(BABYLON.Vector3.Zero());
+    camera.inputs.clear(); // ❌ No camera interaction
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+    let model;
 
     BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
       model = meshes[0];
 
-      //  Set fixed scale to reduce size by 20%
+      // ✅ Scale and position
       model.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-
-      //  Move the model downward to avoid clipping top
       model.position.y = -1;
 
-      //  Enable transparency
-      model.getChildMeshes().forEach(child => {
-        if (child.material) {
-          child.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-          child.material.alpha = 1;
+      // ✅ Ensure transparency
+      model.getChildMeshes().forEach(mesh => {
+        if (mesh.material) {
+          mesh.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+          mesh.material.alpha = 1;
         }
       });
     });
 
-    //  Fade opacity function
-    function fadeModelOpacity(mesh, targetAlpha, duration) {
-      const startTime = performance.now();
-      mesh.getChildMeshes().forEach(child => {
-        if (child.material) {
-          const initialAlpha = child.material.alpha;
-          const animate = (time) => {
-            const progress = Math.min((time - startTime) / duration, 1);
-            child.material.alpha = initialAlpha + (targetAlpha - initialAlpha) * progress;
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          requestAnimationFrame(animate);
+    function fadeModelOpacity(targetAlpha, duration) {
+      const start = performance.now();
+      const fade = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        if (model) {
+          model.getChildMeshes().forEach(mesh => {
+            if (mesh.material) {
+              mesh.material.alpha = 1 - 0.8 * t;
+            }
+          });
         }
-      });
+        if (t < 1) requestAnimationFrame(fade);
+      };
+      requestAnimationFrame(fade);
     }
 
-    function fadeBackgroundColor(scene, targetColor, duration) {
+    function fadeBackgroundColor(targetColor, duration) {
       const startColor = scene.clearColor.clone();
       const startTime = performance.now();
-      const animate = (time) => {
-        const progress = Math.min((time - startTime) / duration, 1);
-        scene.clearColor = BABYLON.Color3.Lerp(startColor, targetColor, progress);
-        if (progress < 1) requestAnimationFrame(animate);
+      const animate = (now) => {
+        const t = Math.min((now - startTime) / duration, 1);
+        scene.clearColor = BABYLON.Color3.Lerp(startColor, targetColor, t);
+        if (t < 1) requestAnimationFrame(animate);
       };
       requestAnimationFrame(animate);
     }
@@ -143,18 +141,16 @@
       container.style.opacity = "1";
     }
 
-    //  Spacebar triggers transition
+    // ✅ Trigger transition on spacebar
     window.addEventListener("keydown", (e) => {
       if (e.key === " ") {
-        if (model) {
-          fadeModelOpacity(model, 0.2, 5000);
-          fadeBackgroundColor(scene, new BABYLON.Color3(0.4, 0.4, 0.4), 5000);
-        }
+        fadeModelOpacity(0.2, 5000);
+        fadeBackgroundColor(new BABYLON.Color3(0.4, 0.4, 0.4), 5000);
         showCarousel();
       }
     });
 
-    //  Slow rotation around Z axis
+    // ✅ Rotate model slowly
     engine.runRenderLoop(() => {
       if (model) {
         model.rotation.z += 0.001;
@@ -166,7 +162,7 @@
       engine.resize();
     });
 
-    //  Carousel logic
+    // ✅ Carousel image logic
     let currentIndex = 0;
     const images = document.querySelectorAll('.carousel-image');
 
