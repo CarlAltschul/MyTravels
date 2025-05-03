@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Czechia Model</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Interactive Czechia Model</title>
+<style>
     body, html {
       margin: 0;
       padding: 0;
@@ -25,23 +26,19 @@
       display: none;
     }
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css">
+<link href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css" rel="stylesheet"/>
 </head>
 <body>
-  <canvas id="renderCanvas"></canvas>
-  <div class="glide">
-    <div class="glide__track" data-glide-el="track">
-      <ul class="glide__slides">
-        <li class="glide__slide"><img src="https://via.placeholder.com/800x400?text=Slide+1" /></li>
-        <li class="glide__slide"><img src="https://via.placeholder.com/800x400?text=Slide+2" /></li>
-        <li class="glide__slide"><img src="https://via.placeholder.com/800x400?text=Slide+3" /></li>
-      </ul>
-    </div>
-  </div>
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
-  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@glidejs/glide"></script>
-  <script>
+<canvas id="renderCanvas"></canvas>
+<div class="glide">
+<div class="glide__track" data-glide-el="track">
+<ul class="glide__slides"><li class="glide__slide"><img alt="Photo 1" src="2015-05-06 08.07.15.jpg"/></li><li class="glide__slide"><img alt="Photo 2" src="2015-05-06 08.11.36.jpg"/></li><li class="glide__slide"><img alt="Photo 3" src="2015-05-11 13.00.28.jpg"/></li><li class="glide__slide"><img alt="Photo 4" src="2015-05-11 13.01.25.jpg"/></li><li class="glide__slide"><img alt="Photo 5" src="2015-05-11 17.24.39.jpg"/></li><li class="glide__slide"><img alt="Photo 6" src="2015-05-11 17.25.30.jpg"/></li><li class="glide__slide"><img alt="Photo 7" src="2015-05-11 17.28.09.jpg"/></li></ul>
+</div>
+</div>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@glidejs/glide"></script>
+<script>
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true);
     let model, interactionActive = true;
@@ -109,4 +106,3 @@
   </script>
 </body>
 </html>
-
