@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Czechia Model Carousel</title>
+  <title>Czechia 3D Carousel</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background-color: #B5D490;
       overflow: hidden;
+      background-color: #B5D490;
     }
 
     #renderCanvas {
-      width: 100vw;
-      height: 100vh;
-      display: block;
       position: absolute;
       top: 0;
       left: 0;
+      width: 100vw;
+      height: 100vh;
       z-index: 0;
+      display: block;
     }
 
     .carousel-container {
@@ -29,12 +29,12 @@
       width: 100vw;
       height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
-      pointer-events: none;
-      z-index: 2;
+      align-items: center;
       opacity: 0;
       transition: opacity 5s ease;
+      z-index: 1;
+      pointer-events: none;
     }
 
     .carousel {
@@ -43,21 +43,22 @@
       height: 80vh;
     }
 
-    .carousel-image {
+    .carousel img {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      max-width: 100%;
-      max-height: 100%;
-      opacity: 0;
-      transition: opacity 1s ease;
+      max-width: 90%;
+      max-height: 90%;
+      opacity: 0.4;
+      transition: all 1s ease;
       pointer-events: auto;
     }
 
-    .carousel-image.active {
+    .carousel img.active {
       opacity: 1;
-      z-index: 1;
+      z-index: 2;
+      transform: translate(-50%, -50%) scale(1.05);
     }
   </style>
 </head>
@@ -66,13 +67,13 @@
 
   <div class="carousel-container" id="carouselContainer">
     <div class="carousel" id="carousel">
-      <img src="2015-05-06 08.07.15.jpg" alt="Photo 1" class="carousel-image active">
-      <img src="2015-05-06 08.11.36.jpg" alt="Photo 2" class="carousel-image">
-      <img src="2015-05-11 13.00.28.jpg" alt="Photo 3" class="carousel-image">
-      <img src="2015-05-11 13.01.25.jpg" alt="Photo 4" class="carousel-image">
-      <img src="2015-05-11 17.24.39.jpg" alt="Photo 5" class="carousel-image">
-      <img src="2015-05-11 17.25.30.jpg" alt="Photo 6" class="carousel-image">
-      <img src="2015-05-11 17.28.09.jpg" alt="Photo 7" class="carousel-image">
+      <img src="2015-05-06 08.07.15.jpg" class="active">
+      <img src="2015-05-06 08.11.36.jpg">
+      <img src="2015-05-11 13.00.28.jpg">
+      <img src="2015-05-11 13.01.25.jpg">
+      <img src="2015-05-11 17.24.39.jpg">
+      <img src="2015-05-11 17.25.30.jpg">
+      <img src="2015-05-11 17.28.09.jpg">
     </div>
   </div>
 
@@ -82,36 +83,40 @@
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);
-    scene.clearColor = BABYLON.Color3.FromHexString("#B5D490");
+    scene.clearColor = new BABYLON.Color3.FromHexString("#B5D490");
 
+    // Camera with no controls
     const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 0, -10), scene);
     camera.setTarget(BABYLON.Vector3.Zero());
-    camera.inputs.clear(); // ❌ No camera interaction
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
     let model;
-
     BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
       model = meshes[0];
+      model.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8); // Scale down
+      model.position.y = -1; // Lower the model
 
-      // ✅ Scale and position
-      model.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-      model.position.y = -1;
-
-      // ✅ Ensure transparency
       model.getChildMeshes().forEach(mesh => {
         if (mesh.material) {
-          mesh.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
           mesh.material.alpha = 1;
+          mesh.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
         }
       });
     });
 
-    function fadeModelOpacity(targetAlpha, duration) {
+    // Animate fade and background dim
+    function startTransition() {
+      // Fade model to 20% opacity over 5s
       const start = performance.now();
-      const fade = (now) => {
-        const t = Math.min((now - start) / duration, 1);
+      const duration = 5000;
+
+      const initialColor = scene.clearColor.clone();
+      const targetColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+
+      function animate(time) {
+        const t = Math.min((time - start) / duration, 1);
+
         if (model) {
           model.getChildMeshes().forEach(mesh => {
             if (mesh.material) {
@@ -119,38 +124,20 @@
             }
           });
         }
-        if (t < 1) requestAnimationFrame(fade);
-      };
-      requestAnimationFrame(fade);
-    }
 
-    function fadeBackgroundColor(targetColor, duration) {
-      const startColor = scene.clearColor.clone();
-      const startTime = performance.now();
-      const animate = (now) => {
-        const t = Math.min((now - startTime) / duration, 1);
-        scene.clearColor = BABYLON.Color3.Lerp(startColor, targetColor, t);
+        scene.clearColor = BABYLON.Color3.Lerp(initialColor, targetColor, t);
+
         if (t < 1) requestAnimationFrame(animate);
-      };
-      requestAnimationFrame(animate);
-    }
-
-    function showCarousel() {
-      const container = document.getElementById("carouselContainer");
-      container.style.pointerEvents = "auto";
-      container.style.opacity = "1";
-    }
-
-    // ✅ Trigger transition on spacebar
-    window.addEventListener("keydown", (e) => {
-      if (e.key === " ") {
-        fadeModelOpacity(0.2, 5000);
-        fadeBackgroundColor(new BABYLON.Color3(0.4, 0.4, 0.4), 5000);
-        showCarousel();
       }
-    });
 
-    // ✅ Rotate model slowly
+      requestAnimationFrame(animate);
+
+      // Fade in carousel
+      document.getElementById('carouselContainer').style.opacity = '1';
+      document.getElementById('carouselContainer').style.pointerEvents = 'auto';
+    }
+
+    // Rotate model
     engine.runRenderLoop(() => {
       if (model) {
         model.rotation.z += 0.001;
@@ -158,21 +145,26 @@
       scene.render();
     });
 
-    window.addEventListener("resize", () => {
-      engine.resize();
+    window.addEventListener("resize", () => engine.resize());
+
+    // Spacebar to trigger
+    window.addEventListener("keydown", (e) => {
+      if (e.key === " ") {
+        startTransition();
+      }
     });
 
-    // ✅ Carousel image logic
-    let currentIndex = 0;
-    const images = document.querySelectorAll('.carousel-image');
+    // Carousel logic
+    const images = document.querySelectorAll('.carousel img');
+    let current = 0;
 
-    function showNextImage() {
-      images[currentIndex].classList.remove('active');
-      currentIndex = (currentIndex + 1) % images.length;
-      images[currentIndex].classList.add('active');
+    function nextImage() {
+      images[current].classList.remove('active');
+      current = (current + 1) % images.length;
+      images[current].classList.add('active');
     }
 
-    setInterval(showNextImage, 5000);
+    setInterval(nextImage, 5000);
   </script>
 </body>
 </html>
