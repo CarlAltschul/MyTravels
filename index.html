@@ -56,9 +56,12 @@
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
-    BABYLON.SceneLoader.ImportMesh("", "/mnt/data/", "Czechia.glb", scene, function (meshes) {
+    // Fix path: use relative path assuming Czechia.glb is in same directory as HTML file
+    BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
       model = meshes[0];
       model.scaling.scaleInPlace(0.8);
+    }, null, function (scene, message, exception) {
+      console.error("Failed to load model:", message, exception);
     });
 
     window.addEventListener("keydown", (e) => {
@@ -70,9 +73,9 @@
         case "ArrowDown": model.rotation.x += 0.1; break;
         case " ": // Spacebar for sunset effect
           interactionActive = false;
-          new BABYLON.Animation("sunset", "light.intensity", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT)
-            .setKeys([{ frame: 0, value: 1 }, { frame: 60, value: 0 }])
-            .apply(light);
+          const animation = new BABYLON.Animation("sunset", "intensity", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+          animation.setKeys([{ frame: 0, value: 1 }, { frame: 60, value: 0 }]);
+          light.animations.push(animation);
           scene.beginAnimation(light, 0, 60, false);
           break;
       }
