@@ -83,31 +83,34 @@
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);
     let model;
+
     scene.clearColor = BABYLON.Color3.FromHexString("#B5D490");
 
-    const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 50;
+    // Static camera setup (no user control)
+    const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 0, -10), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
     BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
       model = meshes[0];
-model.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8); // Set scale to 80% directly
-model.position.y = -0.5;                            // Lower it visually
-enableTransparency(model);
-    });
 
-    function enableTransparency(mesh) {
-      mesh.getChildMeshes().forEach(child => {
+      //  Set fixed scale to reduce size by 20%
+      model.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
+
+      //  Move the model downward to avoid clipping top
+      model.position.y = -1;
+
+      //  Enable transparency
+      model.getChildMeshes().forEach(child => {
         if (child.material) {
           child.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
           child.material.alpha = 1;
         }
       });
-    }
+    });
 
+    //  Fade opacity function
     function fadeModelOpacity(mesh, targetAlpha, duration) {
       const startTime = performance.now();
       mesh.getChildMeshes().forEach(child => {
@@ -140,17 +143,22 @@ enableTransparency(model);
       container.style.opacity = "1";
     }
 
+    //  Spacebar triggers transition
     window.addEventListener("keydown", (e) => {
       if (e.key === " ") {
         if (model) {
           fadeModelOpacity(model, 0.2, 5000);
-          fadeBackgroundColor(scene, new BABYLON.Color3(0.5, 0.5, 0.5), 5000);
+          fadeBackgroundColor(scene, new BABYLON.Color3(0.4, 0.4, 0.4), 5000);
         }
         showCarousel();
       }
     });
 
+    //  Slow rotation around Z axis
     engine.runRenderLoop(() => {
+      if (model) {
+        model.rotation.z += 0.001;
+      }
       scene.render();
     });
 
@@ -158,7 +166,7 @@ enableTransparency(model);
       engine.resize();
     });
 
-    // Carousel cycling logic
+    //  Carousel logic
     let currentIndex = 0;
     const images = document.querySelectorAll('.carousel-image');
 
