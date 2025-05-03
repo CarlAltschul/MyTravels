@@ -20,6 +20,8 @@
     top: 0;
     left: 0;
     z-index: 1;
+    transition: opacity 1s ease-in-out;
+    opacity: 1;
   }
 
   .glide {
@@ -34,6 +36,13 @@
     overflow: hidden;
     padding: 10px;
     box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+
+  .glide.visible {
+    display: block;
+    opacity: 1;
   }
 
   .glide__slide {
@@ -55,7 +64,7 @@
 <body>
 <canvas id="renderCanvas"></canvas>
 
-<div class="glide">
+<div class="glide" id="carousel">
   <div class="glide__track" data-glide-el="track">
     <ul class="glide__slides">
       <li class="glide__slide"><img alt="Photo 1" src="2015-05-06 08.07.15.jpg" /></li>
@@ -74,6 +83,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@glidejs/glide"></script>
 <script>
   const canvas = document.getElementById("renderCanvas");
+  const carousel = document.getElementById("carousel");
   const engine = new BABYLON.Engine(canvas, true);
   let model;
   let interactionActive = true;
@@ -91,8 +101,6 @@
   BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
     model = meshes[0];
     model.scaling.scaleInPlace(0.8);
-
-    // Adjust camera to fit model on initial load
     fitCameraToModel(model);
   });
 
@@ -114,18 +122,31 @@
         if (!interactionActive) return;
         interactionActive = false;
 
-        // Reduce model opacity
-        model.visibility = 0.2;
+        // Smooth opacity transition (via material)
+        fadeModelOpacity(model, 0.2, 1000);
 
-        // Disable camera controls
+        // Disable camera interaction
         camera.detachControl(canvas);
 
-        // Show carousel
-        document.querySelector(".glide").style.display = "block";
+        // Show and fade in carousel
+        carousel.classList.add("visible");
         new Glide('.glide').mount();
         break;
     }
   });
+
+  function fadeModelOpacity(mesh, targetVisibility, duration) {
+    const start = performance.now();
+    const initial = mesh.visibility;
+
+    function animate(time) {
+      const progress = Math.min((time - start) / duration, 1);
+      mesh.visibility = initial + (targetVisibility - initial) * progress;
+      if (progress < 1) requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  }
 
   engine.runRenderLoop(() => {
     scene.render();
