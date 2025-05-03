@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
 <title>Interactive Czechia Model</title>
 <style>
   body, html {
@@ -11,6 +11,7 @@
     background-color: #B5D490;
     overflow: hidden;
   }
+
   #renderCanvas {
     width: 100vw;
     height: 100vh;
@@ -20,36 +21,50 @@
     left: 0;
     z-index: 1;
   }
+
   .glide {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 66.66vh;
-    display: none;
     z-index: 2;
-    background: rgba(255, 255, 255, 0.85);
+    display: none;
+    background: rgba(255, 255, 255, 0.8);
+    overflow: hidden;
+    padding: 10px;
+    box-sizing: border-box;
   }
+
+  .glide__slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   .glide__slide img {
-    width: 100%;
-    height: auto;
+    max-width: 100%;
+    max-height: 60vh;
     object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
 </style>
-<link href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css" rel="stylesheet" />
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
+
 <div class="glide">
   <div class="glide__track" data-glide-el="track">
     <ul class="glide__slides">
-      <li class="glide__slide"><img alt="Photo 1" src="2015-05-06 08.07.15.jpg"/></li>
-      <li class="glide__slide"><img alt="Photo 2" src="2015-05-06 08.11.36.jpg"/></li>
-      <li class="glide__slide"><img alt="Photo 3" src="2015-05-11 13.00.28.jpg"/></li>
-      <li class="glide__slide"><img alt="Photo 4" src="2015-05-11 13.01.25.jpg"/></li>
-      <li class="glide__slide"><img alt="Photo 5" src="2015-05-11 17.24.39.jpg"/></li>
-      <li class="glide__slide"><img alt="Photo 6" src="2015-05-11 17.25.30.jpg"/></li>
-      <li class="glide__slide"><img alt="Photo 7" src="2015-05-11 17.28.09.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 1" src="2015-05-06 08.07.15.jpg" /></li>
+      <li class="glide__slide"><img alt="Photo 2" src="2015-05-06 08.11.36.jpg" /></li>
+      <li class="glide__slide"><img alt="Photo 3" src="2015-05-11 13.00.28.jpg" /></li>
+      <li class="glide__slide"><img alt="Photo 4" src="2015-05-11 13.01.25.jpg" /></li>
+      <li class="glide__slide"><img alt="Photo 5" src="2015-05-11 17.24.39.jpg" /></li>
+      <li class="glide__slide"><img alt="Photo 6" src="2015-05-11 17.25.30.jpg" /></li>
+      <li class="glide__slide"><img alt="Photo 7" src="2015-05-11 17.28.09.jpg" /></li>
     </ul>
   </div>
 </div>
@@ -60,7 +75,8 @@
 <script>
   const canvas = document.getElementById("renderCanvas");
   const engine = new BABYLON.Engine(canvas, true);
-  let model, interactionActive = true;
+  let model;
+  let interactionActive = true;
 
   const scene = new BABYLON.Scene(engine);
   scene.clearColor = BABYLON.Color3.FromHexString("#B5D490");
@@ -75,23 +91,36 @@
   BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
     model = meshes[0];
     model.scaling.scaleInPlace(0.8);
-  }, null, function (scene, message, exception) {
-    console.error("Failed to load model:", message, exception);
+
+    // Adjust camera to fit model on initial load
+    fitCameraToModel(model);
   });
+
+  function fitCameraToModel(mesh) {
+    const boundingInfo = mesh.getHierarchyBoundingVectors();
+    const size = boundingInfo.max.subtract(boundingInfo.min).length();
+    camera.radius = size * 0.9;
+  }
 
   window.addEventListener("keydown", (e) => {
     if (!model) return;
+
     switch (e.key) {
       case "ArrowLeft": model.rotation.y -= 0.1; break;
       case "ArrowRight": model.rotation.y += 0.1; break;
       case "ArrowUp": model.rotation.x -= 0.1; break;
       case "ArrowDown": model.rotation.x += 0.1; break;
-      case " ": // New behavior for spacebar
+      case " ":
+        if (!interactionActive) return;
         interactionActive = false;
+
+        // Reduce model opacity
         model.visibility = 0.2;
 
-        camera.detachControl(canvas); // Disable user rotation
+        // Disable camera controls
+        camera.detachControl(canvas);
 
+        // Show carousel
         document.querySelector(".glide").style.display = "block";
         new Glide('.glide').mount();
         break;
@@ -104,6 +133,7 @@
 
   window.addEventListener("resize", () => {
     engine.resize();
+    if (model) fitCameraToModel(model);
   });
 </script>
 </body>
