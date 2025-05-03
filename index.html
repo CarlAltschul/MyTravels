@@ -1,108 +1,110 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Interactive Czechia Model</title>
 <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      background-color: #B5D490;
-      overflow: hidden;
-    }
-    #renderCanvas {
-      width: 100vw;
-      height: 100vh;
-      display: block;
-    }
-    .glide {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 66.66vh;
-      display: none;
-    }
-  </style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    background-color: #B5D490;
+    overflow: hidden;
+  }
+  #renderCanvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
+  .glide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 66.66vh;
+    display: none;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.85);
+  }
+  .glide__slide img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+</style>
 <link href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css" rel="stylesheet"/>
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
 <div class="glide">
-<div class="glide__track" data-glide-el="track">
-<ul class="glide__slides"><li class="glide__slide"><img alt="Photo 1" src="2015-05-06 08.07.15.jpg"/></li><li class="glide__slide"><img alt="Photo 2" src="2015-05-06 08.11.36.jpg"/></li><li class="glide__slide"><img alt="Photo 3" src="2015-05-11 13.00.28.jpg"/></li><li class="glide__slide"><img alt="Photo 4" src="2015-05-11 13.01.25.jpg"/></li><li class="glide__slide"><img alt="Photo 5" src="2015-05-11 17.24.39.jpg"/></li><li class="glide__slide"><img alt="Photo 6" src="2015-05-11 17.25.30.jpg"/></li><li class="glide__slide"><img alt="Photo 7" src="2015-05-11 17.28.09.jpg"/></li></ul>
+  <div class="glide__track" data-glide-el="track">
+    <ul class="glide__slides">
+      <li class="glide__slide"><img alt="Photo 1" src="2015-05-06 08.07.15.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 2" src="2015-05-06 08.11.36.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 3" src="2015-05-11 13.00.28.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 4" src="2015-05-11 13.01.25.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 5" src="2015-05-11 17.24.39.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 6" src="2015-05-11 17.25.30.jpg"/></li>
+      <li class="glide__slide"><img alt="Photo 7" src="2015-05-11 17.28.09.jpg"/></li>
+    </ul>
+  </div>
 </div>
-</div>
+
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@glidejs/glide"></script>
 <script>
-    const canvas = document.getElementById("renderCanvas");
-    const engine = new BABYLON.Engine(canvas, true);
-    let model, interactionActive = true;
+  const canvas = document.getElementById("renderCanvas");
+  const engine = new BABYLON.Engine(canvas, true);
+  let model, interactionActive = true;
 
-    const scene = new BABYLON.Scene(engine);
-    scene.clearColor = BABYLON.Color3.FromHexString("#B5D490");
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = BABYLON.Color3.FromHexString("#B5D490");
 
-    const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 50;
+  const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
+  camera.attachControl(canvas, true);
+  camera.lowerRadiusLimit = 2;
+  camera.upperRadiusLimit = 50;
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+  const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
-    // Fix path: use relative path assuming Czechia.glb is in same directory as HTML file
-    BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
-      model = meshes[0];
-      model.scaling.scaleInPlace(0.8);
-    }, null, function (scene, message, exception) {
-      console.error("Failed to load model:", message, exception);
-    });
+  BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
+    model = meshes[0];
+    model.scaling.scaleInPlace(0.8);
+  }, null, function (scene, message, exception) {
+    console.error("Failed to load model:", message, exception);
+  });
 
-    window.addEventListener("keydown", (e) => {
-      if (!interactionActive || !model) return;
-      switch (e.key) {
-        case "ArrowLeft": model.rotation.y -= 0.1; break;
-        case "ArrowRight": model.rotation.y += 0.1; break;
-        case "ArrowUp": model.rotation.x -= 0.1; break;
-        case "ArrowDown": model.rotation.x += 0.1; break;
-        case " ": // Spacebar for sunset effect
-          interactionActive = false;
-          const animation = new BABYLON.Animation("sunset", "intensity", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-          animation.setKeys([{ frame: 0, value: 1 }, { frame: 60, value: 0 }]);
-          light.animations.push(animation);
-          scene.beginAnimation(light, 0, 60, false);
-          break;
-      }
-    });
+  window.addEventListener("keydown", (e) => {
+    if (!model) return;
+    switch (e.key) {
+      case "ArrowLeft": model.rotation.y -= 0.1; break;
+      case "ArrowRight": model.rotation.y += 0.1; break;
+      case "ArrowUp": model.rotation.x -= 0.1; break;
+      case "ArrowDown": model.rotation.x += 0.1; break;
+      case " ": // New behavior for spacebar
+        interactionActive = false;
+        model.visibility = 0.2;
 
-    canvas.addEventListener("click", () => {
-      if (!interactionActive || !model) return;
-      interactionActive = false;
+        camera.detachControl(canvas); // Disable user rotation
 
-      model.position.y = -3; // Move it down visually
-      model.scaling.scaleInPlace(0.5);
+        document.querySelector(".glide").style.display = "block";
+        new Glide('.glide').mount();
+        break;
+    }
+  });
 
-      // Resize and reposition canvas to bottom third
-      canvas.style.position = "absolute";
-      canvas.style.height = "33.33vh";
-      canvas.style.width = "100vw";
-      canvas.style.bottom = "0";
+  engine.runRenderLoop(() => {
+    scene.render();
+  });
 
-      // Show carousel
-      document.querySelector(".glide").style.display = "block";
-      new Glide('.glide').mount();
-    });
-
-    engine.runRenderLoop(() => {
-      scene.render();
-    });
-
-    window.addEventListener("resize", () => {
-      engine.resize();
-    });
-  </script>
+  window.addEventListener("resize", () => {
+    engine.resize();
+  });
+</script>
 </body>
 </html>
