@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Interactive Czechia Model</title>
 <style>
   body, html {
@@ -20,8 +20,7 @@
     top: 0;
     left: 0;
     z-index: 1;
-    transition: opacity 1s ease-in-out;
-    opacity: 1;
+    transition: opacity 5s ease-in-out;
   }
 
   .glide {
@@ -37,7 +36,7 @@
     padding: 10px;
     box-sizing: border-box;
     opacity: 0;
-    transition: opacity 1s ease-in-out;
+    transition: opacity 5s ease-in-out;
   }
 
   .glide.visible {
@@ -101,6 +100,17 @@
   BABYLON.SceneLoader.ImportMesh("", "./", "Czechia.glb", scene, function (meshes) {
     model = meshes[0];
     model.scaling.scaleInPlace(0.8);
+    model.position.y = -0.5; // move model down by 20%
+
+    // Ensure all materials can fade
+    meshes.forEach(mesh => {
+      if (mesh.material) {
+        mesh.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+        mesh.material.needDepthPrePass = true;
+        mesh.material.alpha = 1;
+      }
+    });
+
     fitCameraToModel(model);
   });
 
@@ -122,10 +132,8 @@
         if (!interactionActive) return;
         interactionActive = false;
 
-        // Smooth opacity transition (via material)
-        fadeModelOpacity(model, 0.2, 1000);
+        fadeModelOpacity(model, 0.2, 5000); // 5 seconds
 
-        // Disable camera interaction
         camera.detachControl(canvas);
 
         // Show and fade in carousel
@@ -135,17 +143,22 @@
     }
   });
 
-  function fadeModelOpacity(mesh, targetVisibility, duration) {
-    const start = performance.now();
-    const initial = mesh.visibility;
+  function fadeModelOpacity(mesh, targetAlpha, duration) {
+    const startTime = performance.now();
 
-    function animate(time) {
-      const progress = Math.min((time - start) / duration, 1);
-      mesh.visibility = initial + (targetVisibility - initial) * progress;
-      if (progress < 1) requestAnimationFrame(animate);
-    }
+    mesh.getChildMeshes().forEach(child => {
+      if (child.material) {
+        const initialAlpha = child.material.alpha;
 
-    requestAnimationFrame(animate);
+        const animate = (time) => {
+          const progress = Math.min((time - startTime) / duration, 1);
+          child.material.alpha = initialAlpha + (targetAlpha - initialAlpha) * progress;
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+
+        requestAnimationFrame(animate);
+      }
+    });
   }
 
   engine.runRenderLoop(() => {
