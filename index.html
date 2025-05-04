@@ -31,7 +31,7 @@
 <body>
 
 <div id="map-container">
-  <img src="/mnt/data/Europe.png" id="europe-map" alt="Europe Map">
+ <img src="Europe.png" id="europe-map" alt="Europe Map">
   <div class="hotspot" id="czechia-region"></div>
   <div id="tooltip">Czechia</div>
   <canvas id="three-canvas"></canvas>
@@ -66,4 +66,48 @@
     tooltip.style.top = e.pageY + 10 + "px";
     tooltip.style.visibility = "visible";
   });
-  hotspot.addEventListener
+  hotspot.addEventListener("mouseleave", () => {
+    tooltip.style.visibility = "hidden";
+  });
+
+  // Load 3D model on click
+  hotspot.addEventListener("click", () => {
+    init3D();
+  });
+
+  // THREE.js setup
+  let scene, camera, renderer, modelLoaded = false;
+
+  function init3D() {
+    if (modelLoaded) return;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+    renderer.setSize(canvas.width, canvas.height);
+    camera.position.set(0, 0, 3);
+
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+    scene.add(light);
+
+    const loader = new GLTFLoader();
+    loader.load('Czechia.glb', function (gltf) {
+      const model = gltf.scene;
+      model.scale.set(0.5, 0.5, 0.5);
+      model.position.set(0, 0, 0);
+      scene.add(model);
+      modelLoaded = true;
+      animate();
+    }, undefined, function (error) {
+      console.error("Error loading model:", error);
+    });
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
+</script>
+
+</body>
+</html>
